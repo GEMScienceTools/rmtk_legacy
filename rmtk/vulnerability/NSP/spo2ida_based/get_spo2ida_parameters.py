@@ -16,7 +16,10 @@ def get_spo2ida_parameters(SPO, T, Gamma):
     Ry = 1
     Rmax = Fmax_sdof/Fy_sdof
     Rmin = Fmin_sdof/Fy_sdof
-    a = (Rmax-Ry)/(mc-1)
+    if mc == 1: 
+        a = 0
+    else:
+        a = (Rmax-Ry)/(mc-1)
     ac = (Rmax-Rmin)/(mr-mc)
     r = Rmin/Ry
     if ac<0.02: 
@@ -25,9 +28,11 @@ def get_spo2ida_parameters(SPO, T, Gamma):
     elif ac> 4: 
         print 'ac>4, it must be in [0.02,4], changed to ac = 4'
         ac = 4
-    if mc<1 or mc>9: print 'We must have "mc" in [1,9]'
+    if mc<1 or mc>9:
+        print 'mc =', mc, 'We must have "mc" in [1,9]'
     if a<0 or a>0.90: print 'We must have "a" in [0,0.90]'
-    if r<0 or r>0.95: print 'We must have "r" in [0,0.95]'
+    if r<0 or r>0.95:
+        if mf>mr: print 'We must have "r" in [0,0.95]'
     if mf<1: print 'We must have "mf" > 1'
     if T<0.1 or T>4: print 'We must have "T" in [0.1sec,4sec]'
     return [mc,a,ac,r,mf]
