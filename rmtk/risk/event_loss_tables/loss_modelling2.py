@@ -1,10 +1,6 @@
-from mpl_toolkits.basemap import Basemap
-import matplotlib.pyplot as plt
-from matplotlib.colors import LogNorm
 import numpy as np
 import math
 import os
-import rmtk
 import parse_ses
 import parse_elt
 
@@ -16,7 +12,6 @@ def lossModelling(event_loss_table_folder,save_ses_csv,save_elt_csv,total_cost,r
     maxLoss, aal, aalr, lossLevels = estimateLossStatistics(losses,rateOfExceedance,investigationTime,total_cost,return_periods)
     plotCurves(losses,rateOfExceedance,return_periods,lossLevels)
 
-
 def selectRuptures(event_loss_table_folder,return_periods,rups_for_return_period):
     
     investigationTime, ses = parse_ses.parse_ses(event_loss_table_folder,False)
@@ -27,6 +22,24 @@ def selectRuptures(event_loss_table_folder,return_periods,rups_for_return_period
         ruptures = captureRuptures(losses,rateOfExceedance,ses,event_loss_table,return_periods,rups_for_return_period)
         for i in range(len(ruptures)):
             plotCapturedRuptures(ruptures[i],return_periods[i])
+
+def exportInfo(event_loss_table_folder):
+    
+    investigationTime, ses = parse_ses.parse_ses(event_loss_table_folder,False)
+    event_loss_table = parse_elt.parse_elt(event_loss_table_folder,False)
+    losses, rateOfExceedance = estimateLosses(event_loss_table,investigationTime)
+    results = open('results.txt',"w")
+
+
+    for loss in event_loss_table:
+        rup = ses[np.where(ses[:,0]==loss[0]),:][0][0]
+        idrup = rup[0]
+        mag = rup[1]
+        lon = str((float(rup[6])+float(rup[9])+float(rup[12])+float(rup[15]))/4)
+        lat = str((float(rup[7])+float(rup[10])+float(rup[13])+float(rup[16]))/4)
+        depth = str((float(rup[8])+float(rup[11])+float(rup[14])+float(rup[17]))/4)
+        lossValue = loss[2]
+        results.write(idrup+','+mag+','+lon+','+lat+','+depth+','+lossValue+'\n')
 
 def plotCapturedRuptures(ruptures,return_period):
             
@@ -110,8 +123,6 @@ def captureRuptures(losses,rateOfExceedance,ses,event_loss_table,return_periods,
     annual_rate_exc = 1.0/np.array(return_periods)
     ruptures = []
     for rate in annual_rate_exc:
-        print rate
-        print min(rateOfExceedance)
         if rate > min(rateOfExceedance):
             diff = np.abs(rateOfExceedance-rate)
             idx = diff.argsort()[0:rups_for_return_period]
@@ -203,4 +214,8 @@ def find_nearest(array,value):
     return (np.abs(array-value)).argmin()
     
 
-#hist(x, bins=10, range=None, normed=False, weights=None, cumulative=False, bottom=None, histtype=u'bar', align=u'mid', orientation=u'vertical', rwidth=None, log=False, color=None, label=None, stacked=False, **kwargs)
+#investigationTime, ses = parse_ses.parse_ses('Turkey',True)
+event_loss_table = parse_elt.parse_elt('Turkey',True)
+losses, rateOfExceedance = estimateLosses(event_loss_table,132000)
+maxLoss, aal, aalr, lossLevels = estimateLossStatistics(losses,rateOfExceedance,132000, 1.044E12,[475])
+

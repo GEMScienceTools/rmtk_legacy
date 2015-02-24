@@ -11,11 +11,11 @@ import parse_elt
 def lossModelling(event_loss_table_folder,save_ses_csv,save_elt_csv,total_cost,return_periods):
 	
     investigationTime, ses = parse_ses.parse_ses(event_loss_table_folder,save_ses_csv)
+#    investigationTime = 170000
     event_loss_table = parse_elt.parse_elt(event_loss_table_folder,save_elt_csv)
     losses, rateOfExceedance = estimateLosses(event_loss_table,investigationTime)
     maxLoss, aal, aalr, lossLevels = estimateLossStatistics(losses,rateOfExceedance,investigationTime,total_cost,return_periods)
     plotCurves(losses,rateOfExceedance,return_periods,lossLevels)
-
 
 def selectRuptures(event_loss_table_folder,return_periods,rups_for_return_period):
     
@@ -27,6 +27,24 @@ def selectRuptures(event_loss_table_folder,return_periods,rups_for_return_period
         ruptures = captureRuptures(losses,rateOfExceedance,ses,event_loss_table,return_periods,rups_for_return_period)
         for i in range(len(ruptures)):
             plotCapturedRuptures(ruptures[i],return_periods[i])
+
+def exportInfo(event_loss_table_folder):
+    
+    investigationTime, ses = parse_ses.parse_ses(event_loss_table_folder,False)
+    event_loss_table = parse_elt.parse_elt(event_loss_table_folder,False)
+    losses, rateOfExceedance = estimateLosses(event_loss_table,investigationTime)
+    results = open('results.txt',"w")
+
+
+    for loss in event_loss_table:
+        rup = ses[np.where(ses[:,0]==loss[0]),:][0][0]
+        idrup = rup[0]
+        mag = rup[1]
+        lon = str((float(rup[6])+float(rup[9])+float(rup[12])+float(rup[15]))/4)
+        lat = str((float(rup[7])+float(rup[10])+float(rup[13])+float(rup[16]))/4)
+        depth = str((float(rup[8])+float(rup[11])+float(rup[14])+float(rup[17]))/4)
+        lossValue = loss[2]
+        results.write(idrup+','+mag+','+lon+','+lat+','+depth+','+lossValue+'\n')
 
 def plotCapturedRuptures(ruptures,return_period):
             
@@ -192,7 +210,9 @@ def estimateLosses(event_loss_table,investigationTime):
 
     allLosses = map(float, event_loss_table[:,2])
     allLosses.sort(reverse=True)
-    rates = np.arange(1,len(allLosses)+1)/investigationTime
+    print investigationTime
+    print len(allLosses)
+    rates = np.arange(1,len(allLosses)+1)/float(investigationTime)
 
     return allLosses, rates
 
