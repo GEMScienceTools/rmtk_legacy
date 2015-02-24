@@ -78,6 +78,29 @@ def parsePlanarSurface(element):
             
     return topLeft, topRight, bottomLeft, bottomRight
 
+def parseMeshRupture(element):
+    '''
+    Parses the mesh rupture
+    '''
+
+    lon = []
+    lat = []
+    depth = []
+
+    for e in element.iter(): 
+        
+        if e.tag == '%snode' % xmlNRML:
+            lon.append(float(e.attrib.get('lon')))
+            lat.append(float(e.attrib.get('lat')))
+            depth.append(float(e.attrib.get('depth')))
+
+    topLeft = [np.mean(lon),np.mean(lat),np.mean(depth)]
+    topRight = [np.mean(lon),np.mean(lat),np.mean(depth)]
+    bottomLeft = [np.mean(lon),np.mean(lat),np.mean(depth)]
+    bottomRight = [np.mean(lon),np.mean(lat),np.mean(depth)]
+    return topLeft, topRight, bottomLeft, bottomRight
+
+
 def parse_ses_single_file(singleFile):
 
     ses = []
@@ -94,9 +117,20 @@ def parse_ses_single_file(singleFile):
             rake = element.attrib.get('rake')
             tectonicRegion = element.attrib.get('tectonicRegion')
             topLeft, topRight, bottomLeft, bottomRight = parsePlanarSurface(element) 
-            ses.append([rupId,mag,strike,dip,rake,tectonicRegion,topLeft[0],topLeft[1],topLeft[2],
-                topRight[0],topRight[1],topRight[2],bottomLeft[0],bottomLeft[1],bottomLeft[2],
-                bottomRight[0],bottomRight[1],bottomRight[2]]) 
+            if topLeft == 0:
+                topLeft, topRight, bottomLeft, bottomRight = parseMeshRupture(element) 
+            
+                #print rupId
+                #print mag
+                #print strike
+                #print dip
+                #print rake
+                #print tectonicRegion
+                #print topLeft
+                #print topRight
+                #print bottomLeft
+                #print bottomRight
+            ses.append([rupId,mag,strike,dip,rake,tectonicRegion,topLeft[0],topLeft[1],topLeft[2],topRight[0],topRight[1],topRight[2],bottomLeft[0],bottomLeft[1],bottomLeft[2],bottomRight[0],bottomRight[1],bottomRight[2]]) 
 
     return investigationTime, ses
     
@@ -140,7 +174,7 @@ def set_up_arg_parser():
     flags = parser.add_argument_group('flag arguments')
     flags = parser.add_argument_group('flag arguments')
     flags.add_argument('-h', '--help', action='help')
-    flags.add_argument('--input-file',
+    flags.add_argument('--input-folder',
         help='path to loss map NRML file (Required)',
         default=None,
         required=True)
@@ -155,5 +189,5 @@ if __name__ == "__main__":
     parser = set_up_arg_parser()
     args = parser.parse_args()
 
-    if args.input_file:
+    if args.input_folder:
         parse_ses(args.input_folder,args.save)

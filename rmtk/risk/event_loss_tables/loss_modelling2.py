@@ -1,17 +1,12 @@
-from mpl_toolkits.basemap import Basemap
-import matplotlib.pyplot as plt
-from matplotlib.colors import LogNorm
 import numpy as np
 import math
 import os
-import rmtk
 import parse_ses
 import parse_elt
 
 def lossModelling(event_loss_table_folder,save_ses_csv,save_elt_csv,total_cost,return_periods):
 	
     investigationTime, ses = parse_ses.parse_ses(event_loss_table_folder,save_ses_csv)
-#    investigationTime = 170000
     event_loss_table = parse_elt.parse_elt(event_loss_table_folder,save_elt_csv)
     losses, rateOfExceedance = estimateLosses(event_loss_table,investigationTime)
     maxLoss, aal, aalr, lossLevels = estimateLossStatistics(losses,rateOfExceedance,investigationTime,total_cost,return_periods)
@@ -210,9 +205,7 @@ def estimateLosses(event_loss_table,investigationTime):
 
     allLosses = map(float, event_loss_table[:,2])
     allLosses.sort(reverse=True)
-    print investigationTime
-    print len(allLosses)
-    rates = np.arange(1,len(allLosses)+1)/float(investigationTime)
+    rates = np.arange(1,len(allLosses)+1)/investigationTime
 
     return allLosses, rates
 
@@ -221,4 +214,8 @@ def find_nearest(array,value):
     return (np.abs(array-value)).argmin()
     
 
-#hist(x, bins=10, range=None, normed=False, weights=None, cumulative=False, bottom=None, histtype=u'bar', align=u'mid', orientation=u'vertical', rwidth=None, log=False, color=None, label=None, stacked=False, **kwargs)
+#investigationTime, ses = parse_ses.parse_ses('Turkey',True)
+event_loss_table = parse_elt.parse_elt('Turkey',True)
+losses, rateOfExceedance = estimateLosses(event_loss_table,132000)
+maxLoss, aal, aalr, lossLevels = estimateLossStatistics(losses,rateOfExceedance,132000, 1.044E12,[475])
+
